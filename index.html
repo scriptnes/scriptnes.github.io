@@ -1,147 +1,813 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <title>Examples</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модерен Полигонален График</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 70% 30%;
+            height: calc(100vh - 120px);
+        }
+
+        /* ЛЯВА КОЛОНА - ДИАГРАМА */
+        .left-column {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-right: 2px solid #e2e8f0;
+        }
+
+        .chart-wrapper {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .polygraph {
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .polygon-fill {
+            fill: rgba(79, 172, 254, 0.3);
+            stroke: #4facfe;
+            stroke-width: 3;
+            transition: all 0.3s ease;
+        }
+
+        .polygon-fill:hover {
+            fill: rgba(79, 172, 254, 0.5);
+        }
+
+        .grid-circle {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 1;
+            opacity: 0.6;
+        }
+
+        .grid-line {
+            stroke: #e2e8f0;
+            stroke-width: 1;
+            opacity: 0.4;
+        }
+
+        .axis-point {
+            fill: #4facfe;
+            stroke: white;
+            stroke-width: 2;
+            r: 4;
+            transition: all 0.2s ease;
+        }
+
+        .axis-point:hover {
+            r: 6;
+            fill: #00f2fe;
+        }
+
+        .axis-label {
+            fill: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        /* ДЯСНА КОЛОНА - КОНТРОЛИ */
+        .right-column {
+            background: #f8fafc;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .control-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-track {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            border: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            border: 2px solid white;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #00f2fe;
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 0.5rem;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 0.5rem;
+        }
+
+        .edit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+
+        .add-form {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #48bb78, #68d391);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+
+        .stats-preview {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        /* МОДАЛИ - НОВА ПРОСТА ВЕРСИЯ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .modal-icon.warning {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .modal-icon.info {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .modal-icon.error {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .modal-content {
+            color: #4a5568;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            min-width: 100px;
+        }
+
+        .modal-btn.cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #cbd5e0;
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .modal-btn.ok {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .modal-btn.ok:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+
+        .modal-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .modal-form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .modal-form-input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        /* Скрий модалите по подразбиране */
+        .modal-hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .modal-actions {
+                justify-content: stretch;
+            }
+
+            .modal-btn {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
-
 <body>
-    <h2>SVG Graph Example</h2>
-    <!-- template for the polygraph component. -->
-    <script type="text/x-template" id="polygraph-template">
-        <g>
-            <polygon :points="points"></polygon>
-            <circle cx="100" cy="100" r="80"></circle>
-            <axis-label v-for="(stat, index) in stats" :key="stat.id" :stat="stat" :index="index" :total="stats.length">
-            </axis-label>
-        </g>
-    </script>
-    <!-- template for the axis label component. -->
-    <script type="text/x-template" id="axis-label-template">
-        <text :x="point.x" :y="point.y">{{stat.label}}</text>
-    </script>
-    <!-- demo root element -->
-    <div id="demo">
-        <!-- Use the component -->
-        <svg width="200" height="200">
-            <polygraph :stats="stats"></polygraph>
-        </svg>
-        <!-- controls -->
-        <div v-for="stat in stats">
-            <label>{{stat.label}}</label>
-            <input type="range" v-model="stat.value" min="0" max="100">
-            <span>{{stat.value}}</span>
-            <button @click="remove(stat)" class="remove">X</button>
+    <div id="app">
+        <div class="app-container">
+            <div class="header">
+                <h1>Интерактивен Полигонален График</h1>
+                <p>Създайте и персонализирайте своя радарна диаграма</p>
+            </div>
+            
+            <div class="main-content">
+                <!-- ЛЯВА КОЛОНА - САМО ДИАГРАМА -->
+                <div class="left-column">
+                    <div class="chart-wrapper">
+                        <svg width="500" height="400" class="polygraph" viewBox="0 0 500 400">
+                            <defs>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge> 
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/> 
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            
+                            <!-- Grid circles -->
+                            <circle cx="250" cy="200" r="150" class="grid-circle"></circle>
+                            <circle cx="250" cy="200" r="112" class="grid-circle"></circle>
+                            <circle cx="250" cy="200" r="75" class="grid-circle"></circle>
+                            <circle cx="250" cy="200" r="37" class="grid-circle"></circle>
+                            
+                            <!-- Grid lines -->
+                            <g v-for="(stat, index) in stats" :key="'line-' + stat.id">
+                                <line 
+                                    :x1="gridLinePoint(100, index).x" 
+                                    :y1="gridLinePoint(100, index).y"
+                                    x2="250" 
+                                    y2="200" 
+                                    class="grid-line">
+                                </line>
+                            </g>
+                            
+                            <!-- Main polygon -->
+                            <polygon :points="polygonPoints" class="polygon-fill" filter="url(#glow)"></polygon>
+                            
+                            <!-- Data points -->
+                            <circle 
+                                v-for="(stat, index) in stats" 
+                                :key="'point-' + stat.id"
+                                :cx="valueToPoint(stat.value, index).x" 
+                                :cy="valueToPoint(stat.value, index).y" 
+                                class="axis-point">
+                            </circle>
+                            
+                            <!-- Labels -->
+                            <text 
+                                v-for="(stat, index) in stats" 
+                                :key="'label-' + stat.id"
+                                :x="labelPoint(index).x" 
+                                :y="labelPoint(index).y" 
+                                class="axis-label">
+                                {{ stat.label }}
+                            </text>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- ДЯСНА КОЛОНА - САМО КОНТРОЛИ -->
+                <div class="right-column">
+                    <div v-for="stat in stats" :key="stat.id" class="control-group">
+                        <div class="control-label">
+                            <span>{{ stat.label }}</span>
+                            <span class="control-value">{{ stat.value }}%</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            v-model.number="stat.value" 
+                            min="0" 
+                            max="100" 
+                            class="slider">
+                        <div class="button-group">
+                            <button @click="editStat(stat)" class="edit-btn">
+                                ✏️ Редактирай
+                            </button>
+                            <button @click="removeStat(stat)" class="remove-btn">
+                                🗑️ Премахни
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="add-form">
+                        <div class="form-title">Добави нова характеристика</div>
+                        <div class="form-group">
+                            <input 
+                                v-model="newLabel" 
+                                @keyup.enter="addStat"
+                                placeholder="Въведи име на характеристика..."
+                                class="form-input">
+                            <button @click="addStat" class="add-btn">
+                                Добави
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-preview">
+                        {{ JSON.stringify(stats, null, 2) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- МОДАЛ ЗА РЕДАКТИРАНЕ -->
+            <div v-show="showEditModal" class="modal-overlay" @click="cancelEdit">
+                <div class="modal" @click.stop>
+                    <div class="modal-header">
+                        <div class="modal-icon info">✏️</div>
+                        <h3 class="modal-title">Редактиране на характеристика</h3>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-form-group">
+                            <label for="editInput">Въведете новото име за характеристиката:</label>
+                            <input 
+                                v-model="editLabel" 
+                                @keyup.enter="confirmEdit"
+                                type="text"
+                                class="modal-form-input"
+                                id="editInput"
+                                placeholder="Въведи ново име...">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="modal-btn cancel" @click="cancelEdit">
+                            Отказ
+                        </button>
+                        <button class="modal-btn ok" @click="confirmEdit">
+                            Запази
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- МОДАЛ ЗА ПОТВЪРЖДЕНИЕ НА ИЗТРИВАНЕ -->
+            <div v-show="showDeleteModal" class="modal-overlay" @click="cancelDelete">
+                <div class="modal" @click.stop>
+                    <div class="modal-header">
+                        <div class="modal-icon warning">⚠️</div>
+                        <h3 class="modal-title">Потвърждение за изтриване</h3>
+                    </div>
+                    <div class="modal-content">
+                        Сигурни ли сте, че искате да премахнете характеристиката 
+                        <strong>"{{ itemToDelete?.label }}"</strong>?
+                        <br><br>
+                        Това действие не може да бъде отменено.
+                    </div>
+                    <div class="modal-actions">
+                        <button class="modal-btn cancel" @click="cancelDelete">
+                            Отказ
+                        </button>
+                        <button class="modal-btn confirm" @click="confirmDelete">
+                            Премахни
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- МОДАЛ ЗА ГРЕШКИ -->
+            <div v-show="showErrorModal" class="modal-overlay" @click="closeError">
+                <div class="modal" @click.stop>
+                    <div class="modal-header">
+                        <div class="modal-icon error">❌</div>
+                        <h3 class="modal-title">Грешка</h3>
+                    </div>
+                    <div class="modal-content">
+                        {{ errorMessage }}
+                    </div>
+                    <div class="modal-actions">
+                        <button class="modal-btn ok" @click="closeError">
+                            Разбрах
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <form id="add">
-            <input name="newlabel" v-model="newLabel">
-            <button @click="add">Add a Stat</button>
-        </form>
-        <pre id="raw">{{ stats }}</pre>
     </div>
-    <p style="font-size:12px">* input[type="range"] requires IE10 or above.</p>
+
     <script>
-    // The raw data to observe
-    var stats = [{
-        label: 'A',
-        value: 100
-    }, {
-        label: 'B',
-        value: 100
-    }, {
-        label: 'C',
-        value: 100
-    }, {
-        label: 'D',
-        value: 100
-    }, {
-        label: 'E',
-        value: 100
-    }, {
-        label: 'F',
-        value: 100
-    }]
+        const { createApp } = Vue;
 
-    // A resusable polygon graph component
-    Vue.component('polygraph', {
-        props: ['stats'],
-        template: '#polygraph-template',
-        computed: {
-            // a computed property for the polygon's points
-            points: function() {
-                var total = this.stats.length
-                return this.stats.map(function(stat, i) {
-                    var point = valueToPoint(stat.value, i, total)
-                    return point.x + ',' + point.y
-                }).join(' ')
-            }
-        },
-        components: {
-            // a sub component for the labels
-            'axis-label': {
-                props: {
-                    stat: Object,
-                    index: Number,
-                    total: Number
-                },
-                template: '#axis-label-template',
-                computed: {
-                    point: function() {
-                        return valueToPoint(+this.stat.value + 10,
-                            this.index,
-                            this.total
-                        )
-                    }
+        createApp({
+            data() {
+                return {
+                    newLabel: '',
+                    nextId: 7,
+                    showDeleteModal: false,
+                    showErrorModal: false,
+                    showEditModal: false,
+                    itemToDelete: null,
+                    itemToEdit: null,
+                    editLabel: '',
+                    errorMessage: '',
+                    stats: [
+                        { id: 1, label: 'Скорост', value: 85 },
+                        { id: 2, label: 'Сила', value: 92 },
+                        { id: 3, label: 'Издръжливост', value: 78 },
+                        { id: 4, label: 'Интелигентност', value: 95 },
+                        { id: 5, label: 'Креативност', value: 88 },
+                        { id: 6, label: 'Лидерство', value: 82 }
+                    ]
                 }
-            }
-        }
-    })
-
-    // math helper...
-    function valueToPoint(value, index, total) {
-        var x = 0
-        var y = -value * 0.8
-        var angle = Math.PI * 2 / total * index
-        var cos = Math.cos(angle)
-        var sin = Math.sin(angle)
-        var tx = x * cos - y * sin + 100
-        var ty = x * sin + y * cos + 100
-        return {
-            x: tx,
-            y: ty
-        }
-    }
-
-    // bootstrap the demo
-    new Vue({
-        el: '#demo',
-        data: {
-            newLabel: '',
-            stats: stats
-        },
-        methods: {
-            add: function(e) {
-                e.preventDefault()
-                if (!this.newLabel) return
-                this.stats.push({
-                    label: this.newLabel,
-                    value: 100
-                })
-                this.newLabel = ''
             },
-            remove: function(stat) {
-                if (this.stats.length > 3) {
-                    this.stats.splice(this.stats.indexOf(stat), 1)
-                } else {
-                    alert('Can\'t delete more!')
+            computed: {
+                polygonPoints() {
+                    return this.stats.map((stat, i) => {
+                        const point = this.valueToPoint(stat.value, i);
+                        return `${point.x},${point.y}`;
+                    }).join(' ');
+                }
+            },
+            methods: {
+                valueToPoint(value, index) {
+                    const total = this.stats.length;
+                    const x = 0;
+                    const y = -value * 1.5;
+                    const angle = (Math.PI * 2 / total) * index;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    return {
+                        x: x * cos - y * sin + 250,
+                        y: x * sin + y * cos + 200
+                    };
+                },
+                gridLinePoint(value, index) {
+                    const total = this.stats.length;
+                    const x = 0;
+                    const y = -value * 1.5;
+                    const angle = (Math.PI * 2 / total) * index;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    return {
+                        x: x * cos - y * sin + 250,
+                        y: x * sin + y * cos + 200
+                    };
+                },
+                labelPoint(index) {
+                    const total = this.stats.length;
+                    const x = 0;
+                    const y = -170;
+                    const angle = (Math.PI * 2 / total) * index;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    return {
+                        x: x * cos - y * sin + 250,
+                        y: x * sin + y * cos + 200
+                    };
+                },
+                addStat() {
+                    if (!this.newLabel.trim()) {
+                        this.showError('Моля въведете име на характеристика!');
+                        return;
+                    }
+                    
+                    // Проверка за дублиране на имена
+                    if (this.stats.some(stat => stat.label.toLowerCase() === this.newLabel.trim().toLowerCase())) {
+                        this.showError('Характеристика с това име вече съществува!');
+                        return;
+                    }
+                    
+                    this.stats.push({
+                        id: this.nextId++,
+                        label: this.newLabel.trim(),
+                        value: 50
+                    });
+                    this.newLabel = '';
+                },
+                editStat(stat) {
+                    console.log('Edit stat clicked:', stat); // Debug
+                    this.itemToEdit = stat;
+                    this.editLabel = stat.label;
+                    this.showEditModal = true;
+                    console.log('showEditModal set to:', this.showEditModal); // Debug
+                },
+                confirmEdit() {
+                    if (!this.editLabel.trim()) {
+                        this.showError('Моля въведете име на характеристика!');
+                        return;
+                    }
+                    
+                    // Проверка за дублиране на имена (освен текущото)
+                    if (this.stats.some(stat => 
+                        stat.id !== this.itemToEdit.id && 
+                        stat.label.toLowerCase() === this.editLabel.trim().toLowerCase()
+                    )) {
+                        this.showError('Характеристика с това име вече съществува!');
+                        return;
+                    }
+                    
+                    this.itemToEdit.label = this.editLabel.trim();
+                    this.cancelEdit();
+                },
+                cancelEdit() {
+                    this.itemToEdit = null;
+                    this.editLabel = '';
+                    this.showEditModal = false;
+                },
+                removeStat(stat) {
+                    console.log('Remove stat clicked:', stat); // Debug
+                    if (this.stats.length <= 3) {
+                        this.showError('Не може да се премахнат повече елементи! Минимум са необходими 3.');
+                        return;
+                    }
+                    
+                    this.itemToDelete = stat;
+                    this.showDeleteModal = true;
+                    console.log('showDeleteModal set to:', this.showDeleteModal); // Debug
+                },
+                confirmDelete() {
+                    if (this.itemToDelete) {
+                        const index = this.stats.indexOf(this.itemToDelete);
+                        this.stats.splice(index, 1);
+                        this.itemToDelete = null;
+                    }
+                    this.showDeleteModal = false;
+                },
+                cancelDelete() {
+                    this.itemToDelete = null;
+                    this.showDeleteModal = false;
+                },
+                showError(message) {
+                    console.log('Show error:', message); // Debug
+                    this.errorMessage = message;
+                    this.showErrorModal = true;
+                    console.log('showErrorModal set to:', this.showErrorModal); // Debug
+                },
+                closeError() {
+                    this.showErrorModal = false;
+                    this.errorMessage = '';
                 }
             }
-        }
-    })
+        }).mount('#app');
     </script>
 </body>
-
 </html>
